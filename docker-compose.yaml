@@ -1,0 +1,57 @@
+version: '3.9'
+services:
+  web:
+    build: ./app/
+    ports:
+      - 80
+    depends_on:
+      - elastic
+    labels:
+      co.elastic.logs/enabled: true
+      co.elastic.logs/json.keys_under_root: true
+      co.elastic.logs/json.overwrite_keys: true
+      co.elastic.logs/json.add_error_key: true
+      co.elastic.logs/json.expand_keys: true
+
+  proxy:
+    image: traefik:v2.8
+    command: --api.insecure=true --providers.file.directory=/etc/traefik --entryPoints.web.address=:80
+    ports:
+      - '80:80'
+      - '8080:8080'
+    depends_on:
+      - elastic
+    volumes:
+      - ./traefik.yml:/etc/traefik/traefikk.yml
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.3.3
+    depends_on:
+      - elastic
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elastic:9200
+      - SERVER_BASEPATH=/kibana
+
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.3
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-f", "http://localhost:9200/_cat/health"]
+      interval: 3s
+      timeout: 3s
+      retries: 80
+    environment:
+      - xpack.security.enabled=false
+      - 'discovery.type=single-node'
+
+  filebeat:
+    labels:
+      co.elastic.logs/enabled: false
+    user: root
+    image: docker.elastic.co/beats/filebeat:7.14.0
+    command: filebeat -e -strict.perms=false
+    depends_on:
+      - elastic
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro

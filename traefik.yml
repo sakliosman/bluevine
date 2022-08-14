@@ -1,0 +1,33 @@
+http:
+  middlewares:
+    kibana-prefix:
+      stripPrefix:
+        prefixes:
+          - '/kibana'
+
+  routers:
+    router0:
+      entryPoints:
+        - web
+      service: service-app
+      rule: PathPrefix(`/`)
+      
+    router1:
+      entryPoints:
+        - web
+      service: service-kibana
+      rule: PathPrefix(`/kibana`)
+      middlewares:
+        - 'kibana-prefix'
+
+  services:
+    service-app:
+      loadBalancer:
+        servers:
+          - url: http://web/
+
+    service-kibana:
+      middlewares:
+      loadBalancer:
+        servers:
+          - url: http://kibana:5601
