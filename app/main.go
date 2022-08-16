@@ -19,7 +19,7 @@ func init() {
 func hello(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello world from osman\n")
 	logger.Info("request applied",
-		zap.String("host", req.Host),
+		zap.String("requestHost", req.Host),
 		zap.String("method", req.Method),
 		zap.String("remoteAddr", req.RemoteAddr),
 	)
