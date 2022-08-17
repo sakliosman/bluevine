@@ -22,7 +22,7 @@ services:
     depends_on:
       - elastic
     volumes:
-      - ./traefik.yml:/etc/traefik/traefik.yml
+      - ./traefik.yml:/etc/traefik/traefikk.yml
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.3.3
